@@ -113,6 +113,60 @@ class Node:
     def __repr__(self):
         return f"Node({self.value})"
 
+class TreeNodeModifier:
+    def __init__(self, data):
+        self.data = data
+
+    def split_leaf_node(self, node):
+        if 'children' in node and not node['children']:
+            # 当前节点是叶子节点，拆分名称
+            names = list(node['name'])
+            node['children'] = [
+                {"name": name, "value": None, "children": []}
+                for name in names
+            ]
+        else:
+            for child in node.get('children', []):
+                self.split_leaf_node(child)
+
+    def modify_non_leaf_nodes(self, node, is_root=False):
+        if 'children' in node and node['children']:
+            # 当前节点是非叶子节点
+            if is_root:
+                node['name'] = "S"
+            else:
+                node['name'] = "W"
+            node['value'] = None
+            for child in node['children']:
+                self.modify_non_leaf_nodes(child, False)
+        else:
+            # 当前节点是叶子节点，不需要修改
+            pass
+
+    def insert_c_nodes(self, node):
+        if 'children' in node:
+            new_children = []
+            for child in node['children']:
+                if 'children' in child and not child['children']:
+                    # 当前节点是叶子节点，需要在其上一层新增一个"C"节点
+                    new_child = {
+                        "name": "C",
+                        "value": None,
+                        "children": [child]
+                    }
+                    new_children.append(new_child)
+                else:
+                    # 当前节点不是叶子节点，递归处理其子节点
+                    self.insert_c_nodes(child)
+                    new_children.append(child)
+            node['children'] = new_children
+
+    def process_tree(self):
+        self.split_leaf_node(self.data)
+        self.modify_non_leaf_nodes(self.data, True)
+        self.insert_c_nodes(self.data)
+        return self.data
+
 class Build_Tree:
     def __init__(self, data):
         self.sentence = data[0]
@@ -221,7 +275,9 @@ class Build_Tree:
         msr_dict = self.create_segment_dict(self.msr_res, self.msr_marginal)
         pku_dict = self.create_segment_dict(self.pku_res, self.pku_marginal)
         mws_sws_dict = {}
-        mws_sws_dict['mws_res'] = data
+        processor = TreeNodeModifier(data)
+        processed_data = processor.process_tree()
+        mws_sws_dict['mws_res'] = processed_data
         mws_sws_dict['ctb_res'] = ctb_dict
         mws_sws_dict['msr_res'] = msr_dict
         mws_sws_dict['pku_res'] = pku_dict

@@ -11,7 +11,12 @@
     <style>
         #treeChart {
             width: 100%;
-            height: 420px;
+            height: 500px;
+        }
+        #maxi{
+            display: flex; /* 启用 Flexbox */
+            flex-direction: column; /* 子元素垂直堆叠 */
+            width: 100%;
         }
         .result-box {
             background-color: #f8f9fa;
@@ -20,7 +25,7 @@
             padding: 1px;
             padding-top: 10px;
             margin-bottom: 1px;
-            width: 250px;
+            width: 100%;
             /*width: calc(50% - 10px); !* 考虑到padding和margin的影响 *!*/
         }
         .result-box h5{
@@ -50,16 +55,16 @@
         }
 
         /* 定义不同级别的颜色 */
-        .gradient-btn-0 { background: linear-gradient(to right, #d0eaff, #b0d4ff); }
-        .gradient-btn-1 { background: linear-gradient(to right, #b0d4ff, #90c8ff); }
-        .gradient-btn-2 { background: linear-gradient(to right, #90c8ff, #70baff); }
-        .gradient-btn-3 { background: linear-gradient(to right, #70baff, #50a8ff); }
-        .gradient-btn-4 { background: linear-gradient(to right, #50a8ff, #3097ff); }
-        .gradient-btn-5 { background: linear-gradient(to right, #3097ff, #1087fb); }
-        .gradient-btn-6 { background: linear-gradient(to right, #1087fb, #0078f7); }
-        .gradient-btn-7 { background: linear-gradient(to right, #0078f7, #0068f2); }
-        .gradient-btn-8 { background: linear-gradient(to right, #0068f2, #1d60bb); }
-        .gradient-btn-9 { background: linear-gradient(to right, #1d60bb, #1d60bb); }
+        .gradient-btn-0 { background: linear-gradient(to right, #ffffff, #f0f0f0); }
+        .gradient-btn-1 { background: linear-gradient(to right, #f0f0f0, #e0e0e0); }
+        .gradient-btn-2 { background: linear-gradient(to right, #e0e0e0, #d0d0d0); }
+        .gradient-btn-3 { background: linear-gradient(to right, #d0d0d0, #c0c0c0); }
+        .gradient-btn-4 { background: linear-gradient(to right, #c0c0c0, #b3b3b3); }
+        .gradient-btn-5 { background: linear-gradient(to right, #b3b3b3, #a6a6a6); }
+        .gradient-btn-6 { background: linear-gradient(to right, #a6a6a6, #999999); }
+        .gradient-btn-7 { background: linear-gradient(to right, #999999, #8c8c8c); }
+        .gradient-btn-8 { background: linear-gradient(to right, #8c8c8c, #808080); }
+        .gradient-btn-9 { background: linear-gradient(to right, #808080, #808080); }
     </style>
 </head>
 <body>
@@ -69,7 +74,7 @@
         <div class="row">
             <div class="col-md-6 offset-md-3">
                 <div class="input-group mb-3">
-                    <input type="text" class="form-control" id="inputText" placeholder="Please enter the text to be tokenized.">
+                    <input type="text" class="form-control" id="inputText" placeholder="Please enter the text to be segment.">
                     <button class="btn btn-primary" type="button" id="segmentBtn">Word Segment</button>
                 </div>
             </div>
@@ -81,26 +86,26 @@
             </div>
         </div>
         <!-- 结果展示区域 -->
-        <div class="row mt-4">
-            <div class="col-md-3">
+        <div class="row mt-4" id="maxi" style="align-content: center">
+            <div class="col-md-10">
                 <div class="result-box">
                     <h5>CTB guideline</h5>
                     <p id="result_ctb"></p>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-10">
                 <div class="result-box">
                     <h5>MSR guideline</h5>
                     <p id="result_msr"></p>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-10">
                 <div class="result-box">
                     <h5>PKU guideline</h5>
                     <p id="result_pku"></p>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-10">
                 <div class="result-box">
                     <h5>Candidate words</h5>
                     <p id="candidate Words"></p>
@@ -149,7 +154,7 @@
                 })
                 .catch((error) => {
                     console.error('Error:', error); // 打印错误信息
-                    alert('An error occurred while retrieving the tokenization results.'); // 显示错误提示
+                    alert('An error occurred while retrieving the segmentation results.'); // 显示错误提示
                 });
             }
 
@@ -173,7 +178,7 @@
                             left: '7%', // 左侧留白
                             bottom: '15%', // 下方留白
                             right: '7%', // 右侧留白
-                            symbolSize: 10, // 节点符号大小
+                            symbolSize: 0, // 节点符号大小
                             orient: 'vertical', // 垂直方向布局
                             label: {
                                 position: 'top', // 标签位置
@@ -192,12 +197,22 @@
                                     word: {
                                         fontSize: 16,
                                         color:'black',
-                                        backgroundColor: '#75c8e5',
+                                        // backgroundColor: '#ccc8c8',
+                                        backgroundColor: '#ffffff',
+                                        // backgroundColor: function(params) {
+                                        //     if (params.data.name !== 'S' && params.data.name !== 'W' && params.data.name !== 'C') {
+                                        //         // 叶子节点背景色
+                                        //         return '#f10909';
+                                        //     } else {
+                                        //         // 非叶子节点背景色
+                                        //         return '#a19f9f';
+                                        //     }
+                                        // },
                                         padding: [5, 10],
                                         borderRadius: 5
                                     },
                                     value: {
-                                        color: '#090606',
+                                        color: '#a19f9f',
                                         fontSize: 14
                                     }
                                 }
@@ -207,15 +222,17 @@
                                     position: 'bottom',
                                     rotate: 0,
                                     verticalAlign: 'middle',
-                                    align: 'center'
+                                    align: 'center',
+                                    // backgroundColor: '#ffffff'
                                 }
                             },
                             itemStyle: { // 节点样式
                                 color: function(params) {
-                                    if (params.data.value !== null) {
-                                        return getColor(params.data.value); // 根据置信度设置颜色
+                                    if (params.data.children === []){
+                                        return '#ffffff'
+                                    }else{
+                                        return '#555'; // 非叶子节点的颜色
                                     }
-                                    return '#555'; // 非叶子节点的颜色
                                 }
                             },
                             emphasis: { // 高亮配置
@@ -224,11 +241,11 @@
                             expandAndCollapse: true, // 允许展开和折叠
                             animationDuration: 550, // 动画持续时间
                             animationDurationUpdate: 750, // 更新动画持续时间
-                            initialTreeDepth: 2 // 初始树深度
+                            initialTreeDepth: 10 // 初始树深度
                         }
                     ]
                 };
-
+                console.log(option);
                 myChart.setOption(option); // 应用图表配置
             }
 
@@ -285,8 +302,8 @@
 			                <div class="btn-group" role="group">
 			                    <button class="${btnClass}">${key}</button>
 <!--			                    &nbsp;&nbsp;&nbsp; &lt;!&ndash; 添加空格 &ndash;&gt;-->
-			                    <button class="${btnClass}">${value.toFixed(2)}</button>
-			                </div><br />
+			                    <button class="${btnClass}" style="opacity: 0.5;">${value.toFixed(2)}</button>
+			                </div>
 			            `;
 			        }
 			        return html;
