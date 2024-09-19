@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基于片段的多粒度分词结果展示</title>
+    <!-- 引入Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 引入ECharts JS -->
+    <script src="http://cdn.jsdelivr.net/npm/echarts@5.3.2/dist/echarts.min.js"></script>
+    <style>
+        #treeChart {
+            width: 100%;
+            height: 420px;
+        }
+        .result-box {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 容器 -->
+    <div class="container mt-5">
+        <!-- 输入区域 -->
+        <div class="row">
+            <div class="col-md-6 offset-md-3">
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="inputText" placeholder="请输入要分词的文本">
+                    <button class="btn btn-primary" type="button" id="segmentBtn">分词</button>
+                </div>
+            </div>
+        </div>
+        <!-- 图表区域 -->
+        <div class="row mt-4">
+            <div class="col-md-10 offset-md-1">
+                <div id="treeChart"></div>
+            </div>
+        </div>
+        <!-- 结果展示区域 -->
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="result-box">
+                    <h5>结果 1</h5>
+                    <p id="result1"></p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="result-box">
+                    <h5>结果 2</h5>
+                    <p id="result2"></p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="result-box">
+                    <h5>结果 3</h5>
+                    <p id="result3"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DOM 加载完成后执行脚本 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取DOM元素
+            const inputText = document.getElementById('inputText');
+            const segmentBtn = document.getElementById('segmentBtn');
+            const chartDom = document.getElementById('treeChart');
+            const myChart = echarts.init(chartDom); // 初始化 ECharts 实例
+            const result1 = document.getElementById('result1');
+            const result2 = document.getElementById('result2');
+            const result3 = document.getElementById('result3');
+
+            // 分词按钮点击事件
+            segmentBtn.addEventListener('click', function() {
+                const text = inputText.value.trim();
+                if (text) { // 如果输入文本非空
+                    fetchSegmentation(text); // 发起分词请求
+                } else {
+                    alert('请输入要分词的文本'); // 提示输入文本
+                }
+            });
+
+            // 向服务器发送分词请求
+            function fetchSegmentation(text) {
+                fetch('http://127.0.0.1:5000/segment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 'sentence': text }), // 发送文本数据
+                })
+                .then(response => response.json()) // 解析JSON响应
+                .then(data => {
+                    // console.log(data);
+                    renderTree(data.mws_res); // 渲染树状图
+                    updateResults(text, data.mws_res); // 更新结果显示
+                })
+                .catch((error) => {
+                    console.error('Error:', error); // 打印错误信息
+                    alert('获取分词结果时发生错误'); // 显示错误提示
+                });
+            }
+
+            // 根据置信度计算颜色
+            function getColor(value) {
+                const hue = (1 - value) * 240; // 色相值从蓝色到红色变化
+                return `hsl(${hue}, 100%, 50%)`; // 返回颜色字符串
+            }
+
+            // 渲染树状图
+            function renderTree(data) {
+                const option = {
+                    tooltip: {
+                        trigger: 'item', // 悬停在项目上显示提示
+                        triggerOn: 'mousemove' // 当鼠标移动到项目上时触发
+                    },
+                    series: [
+                        {
+                            type: 'tree', // 图表类型为树状图
+                            data: [data], // 数据源
+                            top: '10%', // 上方留白
+                            left: '7%', // 左侧留白
+                            bottom: '15%', // 下方留白
+                            right: '7%', // 右侧留白
+                            symbolSize: 7, // 节点符号大小
+                            orient: 'vertical', // 垂直方向布局
+                            label: {
+                                position: 'top', // 标签位置
+                                rotate: 0, // 标签旋转角度
+                                verticalAlign: 'middle', // 垂直对齐方式
+                                align: 'center', // 水平对齐方式
+                                fontSize: 18, // 字体大小
+                                formatter: function(params) { // 格式化标签内容
+                                    if (params.data.value !== null) {
+                                        // return `{word|${params.name}}\n{value|${params.data.value.toFixed(2)}}`;
+                                        return `{word|${params.name}}\n{value|${params.data.value.toFixed(2)}}`;
+                                    }
+                                    return `{word|${params.name}}`;
+                                },
+                                rich: { // 富文本样式
+                                    word: {
+                                        fontSize: 20,
+                                        color:'white',
+                                        backgroundColor: '#0d6efd',
+                                        padding: [3, 8],
+                                        borderRadius: 5
+                                    },
+                                    value: {
+                                        color: '#999',
+                                        fontSize: 14
+                                    }
+                                }
+                            },
+                            leaves: { // 叶子节点的标签配置
+                                label: {
+                                    position: 'bottom',
+                                    rotate: 0,
+                                    verticalAlign: 'middle',
+                                    align: 'center'
+                                }
+                            },
+                            itemStyle: { // 节点样式
+                                color: function(params) {
+                                    if (params.data.value !== null) {
+                                        return getColor(params.data.value); // 根据置信度设置颜色
+                                    }
+                                    return '#555'; // 非叶子节点的颜色
+                                }
+                            },
+                            emphasis: { // 高亮配置
+                                focus: 'descendant' // 高亮焦点及其后代
+                            },
+                            expandAndCollapse: true, // 允许展开和折叠
+                            animationDuration: 550, // 动画持续时间
+                            animationDurationUpdate: 750, // 更新动画持续时间
+                            initialTreeDepth: 2 // 初始树深度
+                        }
+                    ]
+                };
+
+                myChart.setOption(option); // 应用图表配置
+            }
+
+            // 更新结果显示
+            function updateResults(text, data) {
+                const wordCount = countWords(data); // 计算分词数量
+                const avgConfidence = calculateAverageConfidence(data); // 计算平均置信度
+                // result1.textContent = `输入文本的长度：${text.length} 字符`; // 显示文本长度
+                // result2.textContent = `分词数量：${wordCount} 个`; // 显示分词数量
+                // result3.textContent = `平均置信度：${avgConfidence.toFixed(2)}`; // 显示平均置信度
+                result1.textContent='';
+            }
+
+            // 计算分词数量
+            function countWords(node) {
+                if (!node.children || node.children.length === 0) {
+                    return 1; // 如果是叶子节点返回1
+                }
+                return node.children.reduce((sum, child) => sum + countWords(child), 0); // 递归计算所有子节点
+            }
+
+            // 计算平均置信度
+            function calculateAverageConfidence(node) {
+                let sum = 0;
+                let count = 0;
+
+                // 递归遍历树结构
+                function traverse(n) {
+                    if (n.value !== null) {
+                        sum += n.value;
+                        count++;
+                    }
+                    if (n.children) {
+                        n.children.forEach(traverse);
+                    }
+                }
+
+                traverse(node); // 开始遍历
+                return count > 0 ? sum / count : 0; // 计算平均值
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+<!--<!DOCTYPE html>-->
+<!--<html lang="zh-CN">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>基于片段的多粒度分词结果展示</title>-->
+<!--    &lt;!&ndash; 引入Bootstrap CSS &ndash;&gt;-->
+<!--    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">-->
+<!--    &lt;!&ndash; 引入ECharts JS &ndash;&gt;-->
+<!--    <script src="http://cdn.jsdelivr.net/npm/echarts@5.3.2/dist/echarts.min.js"></script>-->
+<!--    <style>-->
+<!--        #treeChart {-->
+<!--            width: 100%;-->
+<!--            height: 420px;-->
+<!--        }-->
+<!--        .result-box {-->
+<!--        background-color: #f8f9fa;-->
+<!--        border: 1px solid #dee2e6;-->
+<!--        border-radius: 0.25rem;-->
+<!--        padding: 1px;-->
+<!--        margin-bottom: 1px;-->
+<!--        width: 250px;-->
+<!--            /*width: calc(50% - 10px); !* 考虑到padding和margin的影响 *!*/-->
+<!--        }-->
+<!--        .result-box h5{-->
+<!--        text-align: center; /* 居中文本 */-->
+<!--        }-->
+<!--        /*.result-box {*/-->
+<!--        /*    background-color: #f8f9fa;*/-->
+<!--        /*    border: 1px solid #dee2e6;*/-->
+<!--        /*    border-radius: 0.25rem;*/-->
+<!--        /*    padding: 10px;*/-->
+<!--        /*    margin-bottom: 15px;*/-->
+<!--        /*}*/-->
+<!--        /* 定义渐变背景色 */-->
+<!--    /* 定义渐变背景色 */-->
+<!--        .gradient-btn {-->
+<!--            display: inline-block;-->
+<!--            padding: 0.375rem 0.75rem;-->
+<!--            font-size: 1rem;-->
+<!--            line-height: 1.5;-->
+<!--            text-align: center;-->
+<!--            vertical-align: middle;-->
+<!--            user-select: none;-->
+<!--            border: 1px solid transparent;-->
+<!--            border-radius: 0.25rem;-->
+<!--            color: white;-->
+<!--            transition: all 0.2s ease-in-out;-->
+<!--            }-->
+
+<!--            .gradient-btn.light-blue {-->
+<!--                background-image: linear-gradient(to right, #ADD8E6, #87CEFA);-->
+<!--            }-->
+
+<!--            .gradient-btn.light-blue:hover {-->
+<!--                background-image: linear-gradient(to right, #87CEFA, #1E90FF);-->
+<!--            }-->
+
+<!--            .gradient-btn.blue {-->
+<!--                background-image: linear-gradient(to right, #00BFFF, #008B8B);-->
+<!--            }-->
+
+<!--            .gradient-btn.blue:hover {-->
+<!--                background-image: linear-gradient(to right, #008B8B, #00008B);-->
+<!--            }-->
+
+<!--            .gradient-btn.dark-blue {-->
+<!--                background-image: linear-gradient(to right, #00008B, #0000CD);-->
+<!--            }-->
+
+<!--            .gradient-btn.dark-blue:hover {-->
+<!--                background-image: linear-gradient(to right, #0000CD, #000080);-->
+<!--            }-->
+<!--    </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--    &lt;!&ndash; 容器 &ndash;&gt;-->
+<!--    <div class="container mt-5">-->
+<!--        &lt;!&ndash; 输入区域 &ndash;&gt;-->
+<!--        <div class="row">-->
+<!--            <div class="col-md-6 offset-md-3">-->
+<!--                <div class="input-group mb-3">-->
+<!--                    <input type="text" class="form-control" id="inputText" placeholder="请输入要分词的文本">-->
+<!--                    <button class="btn btn-primary" type="button" id="segmentBtn">分词</button>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--        &lt;!&ndash; 图表区域 &ndash;&gt;-->
+<!--        <div class="row mt-4">-->
+<!--            <div class="col-md-10 offset-md-1">-->
+<!--                <div id="treeChart"></div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--        &lt;!&ndash; 结果展示区域 &ndash;&gt;-->
+<!--        <div class="row mt-4">-->
+<!--            <div class="col-md-3">-->
+<!--                <div class="result-box">-->
+<!--                    <h5>CTB guideline</h5>-->
+<!--                    <p id="result_ctb"></p>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--            <div class="col-md-3">-->
+<!--                <div class="result-box">-->
+<!--                    <h5>MSR guideline</h5>-->
+<!--                    <p id="result_msr"></p>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--            <div class="col-md-3">-->
+<!--                <div class="result-box">-->
+<!--                    <h5>PKU guideline</h5>-->
+<!--                    <p id="result_pku"></p>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--            <div class="col-md-3">-->
+<!--                <div class="result-box">-->
+<!--                    <h5>Candidate words</h5>-->
+<!--                    <p id="candidateWords"></p>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+
+<!--    &lt;!&ndash; DOM 加载完成后执行脚本 &ndash;&gt;-->
+<!--    <script>-->
+<!--        document.addEventListener('DOMContentLoaded', function() {-->
+<!--            // 获取DOM元素-->
+<!--            const inputText = document.getElementById('inputText');-->
+<!--            const segmentBtn = document.getElementById('segmentBtn');-->
+<!--            const chartDom = document.getElementById('treeChart');-->
+<!--            const myChart = echarts.init(chartDom); // 初始化 ECharts 实例-->
+<!--            const result_ctb = document.getElementById('result_ctb');-->
+<!--            const result_msr = document.getElementById('result_msr');-->
+<!--            const result_pku = document.getElementById('result_pku');-->
+
+<!--            // 分词按钮点击事件-->
+<!--            segmentBtn.addEventListener('click', function() {-->
+<!--                const text = inputText.value.trim();-->
+<!--                if (text) { // 如果输入文本非空-->
+<!--                    fetchSegmentation(text); // 发起分词请求-->
+<!--                } else {-->
+<!--                    alert('请输入要分词的文本'); // 提示输入文本-->
+<!--                }-->
+<!--            });-->
+
+<!--            // 向服务器发送分词请求-->
+<!--            function fetchSegmentation(text) {-->
+<!--                fetch('http://127.0.0.1:5000/segment', {-->
+<!--                    method: 'POST',-->
+<!--                    headers: {-->
+<!--                        'Content-Type': 'application/json',-->
+<!--                    },-->
+<!--                    body: JSON.stringify({ 'sentence': text }), // 发送文本数据-->
+<!--                })-->
+<!--                .then(response => response.json()) // 解析JSON响应-->
+<!--                .then(data => {-->
+<!--                    // console.log(data);-->
+<!--                    renderTree(data.mws_res); // 渲染树状图-->
+<!--                    // updateResults(text, data); // 更新结果显示-->
+<!--					updateResults(data); // 更新结果显示-->
+<!--                })-->
+<!--                .catch((error) => {-->
+<!--                    console.error('Error:', error); // 打印错误信息-->
+<!--                    alert('获取分词结果时发生错误'); // 显示错误提示-->
+<!--                });-->
+<!--            }-->
+
+<!--            // 根据置信度计算颜色-->
+<!--            function getColor(value) {-->
+<!--                const hue = (1 - value) * 240; // 色相值从蓝色到红色变化-->
+<!--                return `hsl(${hue}, 100%, 50%)`; // 返回颜色字符串-->
+<!--            }-->
+
+<!--            // 渲染树状图-->
+<!--            function renderTree(data) {-->
+<!--                const option = {-->
+<!--                    tooltip: {-->
+<!--                        trigger: 'item', // 悬停在项目上显示提示-->
+<!--                        triggerOn: 'mousemove' // 当鼠标移动到项目上时触发-->
+<!--                    },-->
+<!--                    series: [-->
+<!--                        {-->
+<!--                            type: 'tree', // 图表类型为树状图-->
+<!--                            data: [data], // 数据源-->
+<!--                            top: '10%', // 上方留白-->
+<!--                            left: '7%', // 左侧留白-->
+<!--                            bottom: '15%', // 下方留白-->
+<!--                            right: '7%', // 右侧留白-->
+<!--                            symbolSize: 7, // 节点符号大小-->
+<!--                            orient: 'vertical', // 垂直方向布局-->
+<!--                            label: {-->
+<!--                                position: 'top', // 标签位置-->
+<!--                                rotate: 0, // 标签旋转角度-->
+<!--                                verticalAlign: 'middle', // 垂直对齐方式-->
+<!--                                align: 'center', // 水平对齐方式-->
+<!--                                fontSize: 18, // 字体大小-->
+<!--                                formatter: function(params) { // 格式化标签内容-->
+<!--                                    if (params.data.value !== null) {-->
+<!--                                        // return `{word|${params.name}}\n{value|${params.data.value.toFixed(2)}}`;-->
+<!--                                        return `{word|${params.name}}\n{value|${params.data.value.toFixed(2)}}`;-->
+<!--                                    }-->
+<!--                                    return `{word|${params.name}}`;-->
+<!--                                },-->
+<!--                                rich: { // 富文本样式-->
+<!--                                    word: {-->
+<!--                                        fontSize: 20,-->
+<!--                                        color:'white',-->
+<!--                                        backgroundColor: '#0d6efd',-->
+<!--                                        padding: [3, 8],-->
+<!--                                        borderRadius: 5-->
+<!--                                    },-->
+<!--                                    value: {-->
+<!--                                        color: '#999',-->
+<!--                                        fontSize: 14-->
+<!--                                    }-->
+<!--                                }-->
+<!--                            },-->
+<!--                            leaves: { // 叶子节点的标签配置-->
+<!--                                label: {-->
+<!--                                    position: 'bottom',-->
+<!--                                    rotate: 0,-->
+<!--                                    verticalAlign: 'middle',-->
+<!--                                    align: 'center'-->
+<!--                                }-->
+<!--                            },-->
+<!--                            itemStyle: { // 节点样式-->
+<!--                                color: function(params) {-->
+<!--                                    if (params.data.value !== null) {-->
+<!--                                        return getColor(params.data.value); // 根据置信度设置颜色-->
+<!--                                    }-->
+<!--                                    return '#555'; // 非叶子节点的颜色-->
+<!--                                }-->
+<!--                            },-->
+<!--                            emphasis: { // 高亮配置-->
+<!--                                focus: 'descendant' // 高亮焦点及其后代-->
+<!--                            },-->
+<!--                            expandAndCollapse: true, // 允许展开和折叠-->
+<!--                            animationDuration: 550, // 动画持续时间-->
+<!--                            animationDurationUpdate: 750, // 更新动画持续时间-->
+<!--                            initialTreeDepth: 2 // 初始树深度-->
+<!--                        }-->
+<!--                    ]-->
+<!--                };-->
+
+<!--                myChart.setOption(option); // 应用图表配置-->
+<!--            }-->
+
+<!--            // 更新结果显示-->
+<!--            // function updateResults(text, data) {-->
+<!--            //     const wordCount = countWords(data); // 计算分词数量-->
+<!--            //     const avgConfidence = calculateAverageConfidence(data); // 计算平均置信度-->
+<!--            //     // result_ctb.textContent = `输入文本的长度：${text.length} 字符`; // 显示文本长度-->
+<!--            //     // result_msr.textContent = `分词数量：${wordCount} 个`; // 显示分词数量-->
+<!--            //     // result_pku.textContent = `平均置信度：${avgConfidence.toFixed(2)}`; // 显示平均置信度-->
+<!--            //     result_ctb.textContent='';-->
+<!--            // }-->
+<!--			function updateResults(jsonData) {-->
+<!--				console.log(jsonData)-->
+<!--			    document.getElementById('result_ctb').innerHTML = createButtons(jsonData.ctb_res);-->
+<!--			    document.getElementById('result_msr').innerHTML = createButtons(jsonData.msr_res);-->
+<!--			    document.getElementById('result_pku').innerHTML = createButtons(jsonData.pku_res);-->
+<!--			}-->
+<!--            // 计算分词数量-->
+<!--            function countWords(node) {-->
+<!--                if (!node.children || node.children.length === 0) {-->
+<!--                    return 1; // 如果是叶子节点返回1-->
+<!--                }-->
+<!--                return node.children.reduce((sum, child) => sum + countWords(child), 0); // 递归计算所有子节点-->
+<!--            }-->
+
+<!--			// 创建Btn-->
+<!--			// function createButtons(data) {-->
+<!--			//     let html = '';-->
+<!--			//     for (const [key, value] of Object.entries(data)) {-->
+<!--			//         html += `-->
+<!--			//             <div class="btn-group" role="group" Style="margin:10px">-->
+<!--			//                 <button class="btn btn-primary btn-sm">${key}</button>-->
+<!--			//                 <button class="btn btn-primary btn-sm">${value.toFixed(2)}</button>-->
+<!--			//             </div>-->
+<!--			//         `;-->
+<!--			//     }-->
+<!--			//     return html;-->
+<!--			// }-->
+<!--            function createButtons(data) {-->
+<!--			    let html = '';-->
+<!--			        for (const [key, value] of Object.entries(data)) {-->
+<!--			            let btnClass = '';-->
+<!--			            // if (value < 0.2) {-->
+<!--			            //     btnClass = 'btn btn-danger btn-sm';-->
+<!--			            // } else if (value >= 0.2 && value < 0.5) {-->
+<!--			            //     btnClass = 'btn btn-info btn-sm';-->
+<!--			            // } else if (value >= 0.5 && value <= 0.9) {-->
+<!--			            //     btnClass = 'btn btn-primary btn-sm';-->
+<!--			            // } else if (value > 0.9) {-->
+<!--			            //     btnClass = 'btn btn-success btn-sm';-->
+<!--			            // }-->
+<!--                        if (value < 0.2) {-->
+<!--                            btnClass = 'gradient-btn light-blue';-->
+<!--                        } else if (value >= 0.2 && value < 0.5) {-->
+<!--                            btnClass = 'gradient-btn blue';-->
+<!--                        } else if (value >= 0.5 && value <= 0.9) {-->
+<!--                            btnClass = 'gradient-btn dark-blue';-->
+<!--                        } else if (value > 0.9) {-->
+<!--                            btnClass = 'gradient-btn dark-blue';-->
+<!--                        }-->
+
+<!--			            html += `-->
+<!--			                <div class="btn-group" role="group">-->
+<!--			                    <button class="${btnClass}">${key}</button>-->
+<!--&lt;!&ndash;			                    &nbsp;&nbsp;&nbsp; &lt;!&ndash; 添加空格 &ndash;&gt;&ndash;&gt;-->
+<!--			                    <button class="${btnClass}">${value.toFixed(2)}</button>-->
+<!--			                </div><br />-->
+<!--			            `;-->
+<!--			        }-->
+<!--			        return html;-->
+<!--			}-->
+
+<!--            // 计算平均置信度-->
+<!--            function calculateAverageConfidence(node) {-->
+<!--                let sum = 0;-->
+<!--                let count = 0;-->
+
+<!--                // 递归遍历树结构-->
+<!--                function traverse(n) {-->
+<!--                    if (n.value !== null) {-->
+<!--                        sum += n.value;-->
+<!--                        count++;-->
+<!--                    }-->
+<!--                    if (n.children) {-->
+<!--                        n.children.forEach(traverse);-->
+<!--                    }-->
+<!--                }-->
+
+<!--                traverse(node); // 开始遍历-->
+<!--                return count > 0 ? sum / count : 0; // 计算平均值-->
+<!--            }-->
+<!--        });-->
+<!--    </script>-->
+<!--</body>-->
+<!--</html>-->

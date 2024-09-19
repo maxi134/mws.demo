@@ -4,8 +4,8 @@ import argparse
 import os
 from parser.cmds import Evaluate, Predict, Train, Analyze
 from parser.config import Config
+
 import torch
-from parser.model import Model
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -22,20 +22,19 @@ if __name__ == '__main__':
         subparser = subcommand.add_subparser(name, subparsers)
         subparser.add_argument('--conf', '-c', default='config.ini',
                                help='path to config file')
-        subparser.add_argument('--file', '-f', default='exp/ctb9.char',
+        subparser.add_argument('--file', '-f', default='exp/ctb51.char',
                                help='path to saved files')
         subparser.add_argument('--preprocess', '-p', action='store_true',
                                help='whether to preprocess the data first')
         subparser.add_argument('--device', '-d', default='1',
                                help='ID of GPU to use')
-        subparser.add_argument('--seed', '-s', default=5, type=int,
+        subparser.add_argument('--seed', '-s', default=10, type=int,
                                help='seed for generating random numbers')
-        subparser.add_argument('--threads', '-t', default=10, type=int,
+        subparser.add_argument('--threads', '-t', default=8, type=int,
                                help='max num of threads')
-        subparser.add_argument('--feat', default='bert',
+        subparser.add_argument('--feat', default=None,
                                choices=[None, 'bert', 'bigram', 'trigram'],
                                help='choices of additional features')
-        # 在这里修改batch_size试试
         subparser.add_argument('--batch-size', default=5000, type=int,
                                help='batch size')
         subparser.add_argument('--buckets', default=1, type=int,
@@ -51,16 +50,9 @@ if __name__ == '__main__':
         subparser.add_argument('--link', default=None,
                                choices=[None, 'mlp', 'att'],  
                                help='choices of link method')
-        subparser.add_argument('--bert_model', default="/data3/maxi/bert-base-chinese",
-                               help='the path of model')
-        subparser.add_argument('--n_embed', default=100,
-                               help='embedding')
-        subparser.add_argument('--embed_path', default="../data/embed.ws",
-                               help='the path of embedding file')
-
                     
     args = parser.parse_args()
-    # breakpoint()
+
     print(f"Set the max num of threads to {args.threads}")
     print(f"Set the seed for generating random numbers to {args.seed}")
     print(f"Set the device with ID {args.device} visible")

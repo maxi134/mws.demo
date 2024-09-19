@@ -26,35 +26,30 @@ class Mws:
                 f.writelines(item + '\t' + 's' + '\n')
         return tmp_file
 
-    @ staticmethod
-    def visualize_multigranularity_segmentation(pred_file):
 
-        """
-        根据多粒度分词结果对文本进行可视化，使用累加括号表示不同粒度。
-        """
-        with open(pred_file, 'r', encoding='utf-8') as f:
+    def split_marginal_word(self, result):
+        marginal = [item[2] for item in result]
+        words = [item[:-1] for item in result]
+        return marginal, words
+
+    def visualize_multigranularity_segmentation(self):
+
+        with open(self.pred_dir, 'r', encoding='utf-8') as f:
             lines = f.readlines()
             sentence, segments = lines[0].strip().replace(" ", ""), ast.literal_eval(lines[1].strip())
+
+        # mws_result, ctb_result, msr_result, pku_result = segments
+        # marginal = [item[2] for item in mws_result[0]]
+        # mws_result = [item[:-1] for item in mws_result[0]]
+
         mws_result, ctb_result, msr_result, pku_result = segments
-        marginal = [item[2] for item in mws_result[0]]
-        mws_result = [item[:-1] for item in mws_result[0]]
+        mws_marginal, mws_result = self.split_marginal_word(mws_result)
+        ctb_margianl, ctb_result = self.split_marginal_word(ctb_result)
+        msr_margianl, msr_result = self.split_marginal_word(msr_result)
+        pku_marginal, pku_result = self.split_marginal_word(pku_result)
 
-        # 按照索引从小到大排序，确保较短的粒度在外层，较长的粒度在内层
-        sorted_indices = sorted(range(len(mws_result)), key=lambda i: (mws_result[i][0], mws_result[i][1]))
-        mws_result = [mws_result[i] for i in sorted_indices]
-        marginal = [marginal[i] for i in sorted_indices]
-
-        bracket_arr = [""] * (int(mws_result[-1][-1]) + 1)
-        for start, end in mws_result:
-            bracket_arr[start] += '{'
-            bracket_arr[end] += '}'
-        for i in range(len(sentence)):
-            bracket_arr[i] += sentence[i]
-        mws_res = "".join(bracket_arr)
-        ctb_res = [sentence[start:end] for start, end in ctb_result[0]]
-        msr_res = [sentence[start:end] for start, end in msr_result[0]]
-        pku_res = [sentence[start:end] for start, end in pku_result[0]]
-        return [mws_res, ctb_res, msr_res, pku_res, marginal]
+        return [sentence, mws_result, mws_marginal, ctb_result, ctb_margianl,
+                msr_result, msr_margianl, pku_result, pku_marginal]
 
 
 
@@ -82,10 +77,10 @@ class Mws:
         # process = subprocess.Popen(command, stderr=subprocess.STDOUT, text=True)
         log_file = 'log/predict.log'
         try:
-            with open(log_file, 'w') as logfile:
+            with open(log_file, 'w', encoding='utf-8') as logfile:
                 process = subprocess.Popen(command, stdout=logfile, stderr=subprocess.STDOUT, text=True)
                 process.wait()  # 等待进程完成
-            return self.visualize_multigranularity_segmentation(self.pred_dir)
+            return self.visualize_multigranularity_segmentation()
         except subprocess.CalledProcessError as e:
             print(f"预测失败，错误信息已保存至: {log_file}")
             raise
@@ -96,7 +91,12 @@ class Mws:
 
         # return self.pred_dir
 
+    def split_word_marginal(self, mws_result):
+        pass
+
+
+#
 if __name__ == '__main__':
     mws = Mws()
-    data = mws.predict("多粒度分词")
-    print(data)
+    data = mws.predict("基于片段的多粒度分词")
+    breakpoint()

@@ -41,7 +41,7 @@ class CMD(object):
             self.SEG = SegmentField('segs')
             self.POS = PosField('pos') if args.joint else None
             if args.feat == 'bert':
-                bert_model_path = "/data3/maxi/bert-base-chinese"
+                bert_model_path = "D:/pythonProject/bert-base-chinese"
                 tokenizer = BertTokenizer.from_pretrained(bert_model_path)
                 self.FEAT = BertField('bert',
                                       pad='[PAD]',
@@ -551,18 +551,13 @@ class CMD(object):
                 if self.args.joint:
                     chars, feats, segs, pos = data
                 else:
-                    chars, feats, segs_mask = data  # segs[0]是gold_span,segs[1]是对应的span_mask TODO 修改保留多个gola_label
+                    chars, feats, segs_mask = data  # segs[0]是gold_span,segs[1]是对应的span_mask
                     segs, span_mask = segs_mask
                 feed_dict = {"chars": chars, "feats": feats}
-            # if self.args.feat == 'bert':
-            #     chars, feats, segs_mask = data
-            #     segs, span_mask = segs_mask
-            #     feed_dict = {"chars": chars, "feats": feats}
-            #     segs = self.adjust_segs_matrix(self,chars=chars,segs=segs).to(device=self.args.device) # TODO 不完整标签时使用
+
             elif self.args.feat == 'bigram':
                 chars, bigram, segs_mask = data
                 segs, span_mask = segs_mask
-                # chars, bigram = data
                 feed_dict = {"chars": chars, "bigram": bigram}
             elif self.args.feat == 'trigram':
                 chars, bigram, trigram = data
@@ -635,9 +630,38 @@ class CMD(object):
                     tmp.append((start, end, marginal_prob))
                 segs_cky_marginal.append(tmp)
             result_cky.extend(segs_cky_marginal)
+
+            marginal_pred_segs_ctb = []
+            for batch_index, segs in enumerate(pred_segs_ctb):
+                tmp = []
+                for start, end in segs:
+                    marginal_prob = span_marginals_ctb[batch_index, start, end].item()
+                    marginal_prob = round(marginal_prob, 2)
+                    tmp.append((start, end, marginal_prob))
+                marginal_pred_segs_ctb = tmp
+            pred_segs_ctb = marginal_pred_segs_ctb
+
+            marginal_pred_segs_msr = []
+            for batch_index, segs in enumerate(pred_segs_msr):
+                tmp = []
+                for start, end in segs:
+                    marginal_prob = span_marginals_msr[batch_index, start, end].item()
+                    marginal_prob = round(marginal_prob, 2)
+                    tmp.append((start, end, marginal_prob))
+                marginal_pred_segs_msr = tmp
+            pred_segs_msr = marginal_pred_segs_msr
+            marginal_pred_segs_ppd = []
+            for batch_index, segs in enumerate(pred_segs_ppd):
+                tmp = []
+                for start, end in segs:
+                    marginal_prob = span_marginals_ppd[batch_index, start, end].item()
+                    marginal_prob = round(marginal_prob, 2)
+                    tmp.append((start, end, marginal_prob))
+                marginal_pred_segs_ppd = tmp
+            pred_segs_ppd = marginal_pred_segs_ppd
             # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             result_demo = []
-            result_demo.append([result_cky, pred_segs_ctb, pred_segs_msr, pred_segs_ppd])
+            result_demo.append([result_cky[0], pred_segs_ctb, pred_segs_msr, pred_segs_ppd]) # 只支持单个的句子
         return result_demo
 
     @torch.no_grad()

@@ -87,7 +87,7 @@ class Corpus(object):
     def read_sentence(cls,path):
         sentences = []
         sentence = []
-        with open(path,'r') as f:
+        with open(path, 'r', encoding='utf-8') as f:
             lines = [line.strip() for line in f]
         sentence = ' '.join(line.split('\t')[0] for line in lines)
         sentences.append(sentence)
@@ -105,7 +105,7 @@ class Corpus(object):
         start, sentences = 0, []
         fields = [field if field is not None else Field(str(i))
                   for i, field in enumerate(fields)]
-        with open(path, 'r') as f:
+        with open(path, 'r', encoding='utf-8') as f:
             lines = [line.strip() for line in f]
         # 选择多粒度分词的数据集时需要修改标签转换
         # fn = tag2seg_pos if joint else tag2seg

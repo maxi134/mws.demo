@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>基于片段的多粒度分词结果展示</title>
+    <title>Span-based multi-granularity word segment results display</title>
     <!-- 引入Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- 引入ECharts JS -->
@@ -14,16 +14,17 @@
             height: 420px;
         }
         .result-box {
-        background-color: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 0.25rem;
-        padding: 1px;
-        margin-bottom: 1px;
-        width: 250px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            padding: 1px;
+            padding-top: 10px;
+            margin-bottom: 1px;
+            width: 250px;
             /*width: calc(50% - 10px); !* 考虑到padding和margin的影响 *!*/
         }
         .result-box h5{
-        text-align: center; /* 居中文本 */
+            text-align: center; /* 居中文本 */
         }
         /*.result-box {*/
         /*    background-color: #f8f9fa;*/
@@ -34,43 +35,31 @@
         /*}*/
         /* 定义渐变背景色 */
     /* 定义渐变背景色 */
+        /* 基础样式 */
         .gradient-btn {
-            display: inline-block;
-            padding: 0.375rem 0.75rem;
-            font-size: 1rem;
-            line-height: 1.5;
-            text-align: center;
-            vertical-align: middle;
-            user-select: none;
-            border: 1px solid transparent;
-            border-radius: 0.25rem;
+            border: none;
             color: white;
-            transition: all 0.2s ease-in-out;
-            }
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px; /* 可选：添加圆角 */
+        }
 
-            .gradient-btn.light-blue {
-                background-image: linear-gradient(to right, #ADD8E6, #87CEFA);
-            }
-
-            .gradient-btn.light-blue:hover {
-                background-image: linear-gradient(to right, #87CEFA, #1E90FF);
-            }
-
-            .gradient-btn.blue {
-                background-image: linear-gradient(to right, #00BFFF, #008B8B);
-            }
-
-            .gradient-btn.blue:hover {
-                background-image: linear-gradient(to right, #008B8B, #00008B);
-            }
-
-            .gradient-btn.dark-blue {
-                background-image: linear-gradient(to right, #00008B, #0000CD);
-            }
-
-            .gradient-btn.dark-blue:hover {
-                background-image: linear-gradient(to right, #0000CD, #000080);
-            }
+        /* 定义不同级别的颜色 */
+        .gradient-btn-0 { background: linear-gradient(to right, #d0eaff, #b0d4ff); }
+        .gradient-btn-1 { background: linear-gradient(to right, #b0d4ff, #90c8ff); }
+        .gradient-btn-2 { background: linear-gradient(to right, #90c8ff, #70baff); }
+        .gradient-btn-3 { background: linear-gradient(to right, #70baff, #50a8ff); }
+        .gradient-btn-4 { background: linear-gradient(to right, #50a8ff, #3097ff); }
+        .gradient-btn-5 { background: linear-gradient(to right, #3097ff, #1087fb); }
+        .gradient-btn-6 { background: linear-gradient(to right, #1087fb, #0078f7); }
+        .gradient-btn-7 { background: linear-gradient(to right, #0078f7, #0068f2); }
+        .gradient-btn-8 { background: linear-gradient(to right, #0068f2, #1d60bb); }
+        .gradient-btn-9 { background: linear-gradient(to right, #1d60bb, #1d60bb); }
     </style>
 </head>
 <body>
@@ -80,8 +69,8 @@
         <div class="row">
             <div class="col-md-6 offset-md-3">
                 <div class="input-group mb-3">
-                    <input type="text" class="form-control" id="inputText" placeholder="请输入要分词的文本">
-                    <button class="btn btn-primary" type="button" id="segmentBtn">分词</button>
+                    <input type="text" class="form-control" id="inputText" placeholder="Please enter the text to be tokenized.">
+                    <button class="btn btn-primary" type="button" id="segmentBtn">Word Segment</button>
                 </div>
             </div>
         </div>
@@ -114,7 +103,7 @@
             <div class="col-md-3">
                 <div class="result-box">
                     <h5>Candidate words</h5>
-                    <p id="candidateWords"></p>
+                    <p id="candidate Words"></p>
                 </div>
             </div>
         </div>
@@ -138,7 +127,7 @@
                 if (text) { // 如果输入文本非空
                     fetchSegmentation(text); // 发起分词请求
                 } else {
-                    alert('请输入要分词的文本'); // 提示输入文本
+                    alert('Please enter the text to be tokenized.'); // 提示输入文本
                 }
             });
 
@@ -160,7 +149,7 @@
                 })
                 .catch((error) => {
                     console.error('Error:', error); // 打印错误信息
-                    alert('获取分词结果时发生错误'); // 显示错误提示
+                    alert('An error occurred while retrieving the tokenization results.'); // 显示错误提示
                 });
             }
 
@@ -176,8 +165,7 @@
                     tooltip: {
                         trigger: 'item', // 悬停在项目上显示提示
                         triggerOn: 'mousemove' // 当鼠标移动到项目上时触发
-                    },
-                    series: [
+                    }, series: [
                         {
                             type: 'tree', // 图表类型为树状图
                             data: [data], // 数据源
@@ -185,14 +173,14 @@
                             left: '7%', // 左侧留白
                             bottom: '15%', // 下方留白
                             right: '7%', // 右侧留白
-                            symbolSize: 7, // 节点符号大小
+                            symbolSize: 10, // 节点符号大小
                             orient: 'vertical', // 垂直方向布局
                             label: {
                                 position: 'top', // 标签位置
                                 rotate: 0, // 标签旋转角度
                                 verticalAlign: 'middle', // 垂直对齐方式
                                 align: 'center', // 水平对齐方式
-                                fontSize: 18, // 字体大小
+                                fontSize: 16, // 字体大小
                                 formatter: function(params) { // 格式化标签内容
                                     if (params.data.value !== null) {
                                         // return `{word|${params.name}}\n{value|${params.data.value.toFixed(2)}}`;
@@ -202,14 +190,14 @@
                                 },
                                 rich: { // 富文本样式
                                     word: {
-                                        fontSize: 20,
-                                        color:'white',
-                                        backgroundColor: '#0d6efd',
-                                        padding: [3, 8],
+                                        fontSize: 16,
+                                        color:'black',
+                                        backgroundColor: '#75c8e5',
+                                        padding: [5, 10],
                                         borderRadius: 5
                                     },
                                     value: {
-                                        color: '#999',
+                                        color: '#090606',
                                         fontSize: 14
                                     }
                                 }
@@ -267,40 +255,30 @@
                 return node.children.reduce((sum, child) => sum + countWords(child), 0); // 递归计算所有子节点
             }
 
-			// 创建Btn
-			// function createButtons(data) {
-			//     let html = '';
-			//     for (const [key, value] of Object.entries(data)) {
-			//         html += `
-			//             <div class="btn-group" role="group" Style="margin:10px">
-			//                 <button class="btn btn-primary btn-sm">${key}</button>
-			//                 <button class="btn btn-primary btn-sm">${value.toFixed(2)}</button>
-			//             </div>
-			//         `;
-			//     }
-			//     return html;
-			// }
             function createButtons(data) {
 			    let html = '';
 			        for (const [key, value] of Object.entries(data)) {
 			            let btnClass = '';
-			            // if (value < 0.2) {
-			            //     btnClass = 'btn btn-danger btn-sm';
-			            // } else if (value >= 0.2 && value < 0.5) {
-			            //     btnClass = 'btn btn-info btn-sm';
-			            // } else if (value >= 0.5 && value <= 0.9) {
-			            //     btnClass = 'btn btn-primary btn-sm';
-			            // } else if (value > 0.9) {
-			            //     btnClass = 'btn btn-success btn-sm';
-			            // }
-                        if (value < 0.2) {
-                            btnClass = 'gradient-btn light-blue';
-                        } else if (value >= 0.2 && value < 0.5) {
-                            btnClass = 'gradient-btn blue';
-                        } else if (value >= 0.5 && value <= 0.9) {
-                            btnClass = 'gradient-btn dark-blue';
-                        } else if (value > 0.9) {
-                            btnClass = 'gradient-btn dark-blue';
+                        if (value < 0.1) {
+                            btnClass = 'gradient-btn gradient-btn-0';
+                        } else if (value >= 0.1 && value < 0.2) {
+                            btnClass = 'gradient-btn gradient-btn-1';
+                        } else if (value >= 0.2 && value < 0.3) {
+                            btnClass = 'gradient-btn gradient-btn-2';
+                        } else if (value >= 0.3 && value < 0.4) {
+                            btnClass = 'gradient-btn gradient-btn-3';
+                        } else if (value >= 0.4 && value < 0.5) {
+                            btnClass = 'gradient-btn gradient-btn-4';
+                        } else if (value >= 0.5 && value < 0.6) {
+                            btnClass = 'gradient-btn gradient-btn-5';
+                        } else if (value >= 0.6 && value < 0.7) {
+                            btnClass = 'gradient-btn gradient-btn-6';
+                        } else if (value >= 0.7 && value < 0.8) {
+                            btnClass = 'gradient-btn gradient-btn-7';
+                        } else if (value >= 0.8 && value < 0.9) {
+                            btnClass = 'gradient-btn gradient-btn-8';
+                        } else if (value >= 0.9 && value <= 1.0) {
+                            btnClass = 'gradient-btn gradient-btn-9';
                         }
 
 			            html += `

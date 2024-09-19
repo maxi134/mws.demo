@@ -56,7 +56,6 @@ class Predict(CMD):
 
         # pred_labels = self.predict_cws(dataset.loader)
         pred_labels = self.predict(dataset.loader)
-
         indices = torch.tensor([i
                                 for bucket in dataset.buckets.values()
                                 for i in bucket]).argsort()
@@ -65,7 +64,7 @@ class Predict(CMD):
         corpus.labels = [pred_labels[i] for i in indices]
 
         print(f"Save the predicted result to {args.fpred}")
-        with open(args.fpred, 'w') as f:
+        with open(args.fpred, 'w', encoding='utf-8') as f:
             for i in range(len(data)):
                 f.writelines(data[i])
                 f.writelines('\n')

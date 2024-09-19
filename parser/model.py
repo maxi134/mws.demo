@@ -23,6 +23,7 @@ class Model(nn.Module):
                                        embedding_dim=args.n_embed)
         n_lstm_input = args.n_embed  # 100
         if args.feat == 'bert': # 使用bert进行编码
+            args.bert_model = "/pythonProject/bert-base-chinese"
             self.feat_embed = BertEmbedding(model=args.bert_model,
                                             n_layers=args.n_bert_layers,
                                             n_out=args.n_embed,
@@ -47,7 +48,7 @@ class Model(nn.Module):
         self.lstm_dropout = SharedDropout(p=args.lstm_dropout)
 
         # the bert layer
-        self.bert = BertEmbedding(model='/data3/maxi/bert-base-chinese',
+        self.bert = BertEmbedding(model='D:/pythonProject/bert-base-chinese',
                                   n_layers=args.n_bert_layers,
                                   n_out=800,
                                   requires_grad=True)
