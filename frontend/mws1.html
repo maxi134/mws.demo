@@ -11,7 +11,7 @@
     <style>
         #treeChart {
             width: 100%;
-            height: 500px;
+            height: 600px;
         }
         #maxi{
             display: flex; /* 启用 Flexbox */
@@ -65,6 +65,57 @@
         .gradient-btn-7 { background: linear-gradient(to right, #999999, #8c8c8c); }
         .gradient-btn-8 { background: linear-gradient(to right, #8c8c8c, #808080); }
         .gradient-btn-9 { background: linear-gradient(to right, #808080, #808080); }
+
+        .custom-button {
+            --bs-btn-bg: #6c757d; /* 主背景颜色 */
+            --bs-btn-border-color: #6c757d; /* 边框颜色 */
+            --bs-btn-hover-bg: #545b64; /* 悬停时的背景颜色 */
+            --bs-btn-hover-border-color: #545b64; /* 悬停时的边框颜色 */
+            --bs-btn-focus-shadow-rgb: 108, 117, 125; /* 焦点状态下的阴影颜色 */
+            --bs-btn-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 1px 1px rgba(0, 0, 0, 0.075); /* 阴影 */
+            --bs-btn-focus-box-shadow: 0 0 0 0.25rem rgba(var(--bs-btn-focus-shadow-rgb), .5); /* 焦点状态下的阴影 */
+            --bs-btn-disabled-opacity: 0.65; /* 禁用状态下的透明度 */
+
+            color: #fff; /* 文字颜色 */
+            background-color: var(--bs-btn-bg);
+            border-color: var(--bs-btn-border-color);
+            box-shadow: var(--bs-btn-box-shadow);
+            transition: all 0.2s ease-in-out;
+
+            &:hover {
+                background-color: var(--bs-btn-hover-bg);
+                border-color: var(--bs-btn-hover-border-color);
+                box-shadow: var(--bs-btn-box-shadow);
+            }
+
+            &:focus {
+                box-shadow: var(--bs-btn-focus-box-shadow);
+            }
+
+            &:active {
+                background-color: #545b64; /* 激活状态下的背景颜色 */
+                border-color: #545b64; /* 激活状态下的边框颜色 */
+                box-shadow: var(--bs-btn-box-shadow);
+            }
+
+            &:disabled, &[disabled] {
+                opacity: var(--bs-btn-disabled-opacity);
+                pointer-events: none;
+            }
+        }
+
+        .custom-input {
+            background-color: #fff; /* 背景颜色为白色 */
+            color: #495057; /* 文字颜色 */
+            border-color: #dee2e6; /* 边框颜色 */
+            width: 70%;
+
+            &:focus {
+                border-color: #aaa; /* 获取焦点时的边框颜色 */
+                box-shadow: 0 0 0 0.25rem rgba(155, 153, 153, 0.2); /* 获取焦点时的四周灰色阴影 */
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -74,8 +125,9 @@
         <div class="row">
             <div class="col-md-6 offset-md-3">
                 <div class="input-group mb-3">
-                    <input type="text" class="form-control" id="inputText" placeholder="Please enter the text to be segment.">
-                    <button class="btn btn-primary" type="button" id="segmentBtn">Word Segment</button>
+                    <input type="text" class="custom-input" id="inputText" style="background-color: #f8f9fa; color: #495057; border-color: #dee2e6;" placeholder="Please enter the text to be segmented.">
+<!--                    <input type="text" class="form-control" id="inputText" placeholder="Please enter the text to be segment.">-->
+                    <button class="btn custom-button" type="button" id="segmentBtn">Word Segment</button>
                 </div>
             </div>
         </div>
@@ -154,7 +206,7 @@
                 })
                 .catch((error) => {
                     console.error('Error:', error); // 打印错误信息
-                    alert('An error occurred while retrieving the segmentation results.'); // 显示错误提示
+                    // alert('An error occurred while retrieving the segmentation results.'); // 显示错误提示
                 });
             }
 
@@ -263,6 +315,7 @@
 			    document.getElementById('result_ctb').innerHTML = createButtons(jsonData.ctb_res);
 			    document.getElementById('result_msr').innerHTML = createButtons(jsonData.msr_res);
 			    document.getElementById('result_pku').innerHTML = createButtons(jsonData.pku_res);
+                document.getElementById('candiate_words').innerHTML = createButtons(jsonData.candiate_words);
 			}
             // 计算分词数量
             function countWords(node) {
@@ -300,10 +353,9 @@
 
 			            html += `
 			                <div class="btn-group" role="group">
-			                    <button class="${btnClass}">${key}</button>
-<!--			                    &nbsp;&nbsp;&nbsp; &lt;!&ndash; 添加空格 &ndash;&gt;-->
-			                    <button class="${btnClass}" style="opacity: 0.5;">${value.toFixed(2)}</button>
-			                </div>
+                            <button class="${btnClass}" style="width: 100px; height: 30px; font-size: 15px; font-family: Arial, sans-serif; color: #000000;">${key}</button>
+                            <button class="${btnClass}" style="width: 100px; height: 30px; font-size: 15px; font-family: Arial, sans-serif; color: #000000; opacity: 0.5;">${value.toFixed(2)}</button>
+                        </div>
 			            `;
 			        }
 			        return html;

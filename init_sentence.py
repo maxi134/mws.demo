@@ -164,7 +164,7 @@ class TreeNodeModifier:
     def process_tree(self):
         self.split_leaf_node(self.data)
         self.modify_non_leaf_nodes(self.data, True)
-        self.insert_c_nodes(self.data)
+        # self.insert_c_nodes(self.data)
         return self.data
 
 class Build_Tree:
