@@ -172,12 +172,21 @@ class Build_Tree:
         self.sentence = data[0]
         self.mws_res = data[1]
         self.mws_marginal = data[2]
-        self.ctb_res = data[3]
-        self.ctb_marginal = data[4]
-        self.msr_res = data[5]
-        self.msr_marginal = data[6]
-        self.pku_res = data[7]
-        self.pku_marginal = data[8]
+        tmp_ctb = zip(data[3],data[4])
+        tmp_ctb = sorted(tmp_ctb,key=lambda x: x[0][0])
+        self.ctb_res, self.ctb_marginal = zip(*tmp_ctb)
+        tmp_msr = zip(data[5], data[6])
+        tmp_msr = sorted(tmp_msr, key=lambda x: x[0][0])
+        self.msr_res, self.msr_marginal = zip(*tmp_msr)
+        tmp_pku = zip(data[7], data[8])
+        tmp_pku = sorted(tmp_pku, key=lambda x: x[0][0])
+        self.pku_res, self.pku_marginal = zip(*tmp_pku)
+        # self.ctb_res = data[3]
+        # self.ctb_marginal = data[4]
+        # self.msr_res = data[5]
+        # self.msr_marginal = data[6]
+        # self.pku_res = data[7]
+        # self.pku_marginal = data[8]
         self.root = (self.mws_res[0][0], self.mws_res[-1][-1])
 
     def obtain_candidate(self):
@@ -282,7 +291,7 @@ class Build_Tree:
         mws_sws_dict['msr_res'] = msr_dict
         mws_sws_dict['pku_res'] = pku_dict
         candidate_dict = self.obtain_candidate()
-        mws_sws_dict['candiate_words'] = candidate_dict
+        mws_sws_dict['candidate_words'] = candidate_dict
         return json.dumps(mws_sws_dict, ensure_ascii=False, indent=4)
 
 
@@ -294,16 +303,18 @@ if __name__ == '__main__':
             [(0, 2), (2, 4), (4, 5), (5, 10)],
             [(0, 2), (2, 4), (4, 5), (5, 6), (6, 8), (8, 9), (9, 10)],
             [(0, 2), (2, 4), (4, 5), (5, 10)]]
-    new_data = ['基于片段的多粒度分词',
-                [(0, 2), (2, 4), (4, 5), (5, 6), (5, 10), (6, 8), (8, 9), (9, 10)],
-                [0.99, 1.0, 1.0, 0.36, 0.33, 0.31, 0.36, 0.4],
-                [(0, 2), (2, 4), (4, 5), (5, 10)],
-                [0.98, 1.0, 1.0, 0.58],
-                [(0, 2), (2, 4), (4, 5), (5, 6), (6, 8), (8, 9), (9, 10)],
-                [1.0, 1.0, 1.0, 0.9, 0.81, 0.88, 0.91],
-                [(0, 2), (2, 4), (4, 5), (5, 10)],
-                [1.0, 1.0, 1.0, 0.4]]
+    new_data = ['高敖曹加封侍中、开府，进爵武城县侯',
+                [(0, 3), (3, 4), (3, 5), (4, 5), (5, 7), (7, 8), (8, 10), (10, 11), (11, 13), (13, 16), (13, 17), (16, 17)],
+                [0.94, 0.63, 0.34, 0.66, 1.0, 1.0, 0.99, 0.99, 0.62, 0.36, 0.43, 0.41],
+                [(0, 3), (3, 4), (4, 5), (5, 7), (7, 8), (8, 10), (10, 11), (11, 13), (13, 15), (15, 17)],
+                [0.9, 0.66, 0.71, 1.0, 1.0, 0.99, 0.98, 0.66, 0.6, 0.46],
+                [(0, 3), (3, 5), (5, 7), (7, 8), (8, 10), (10, 11), (11, 13), (13, 16), (16, 17)],
+                [0.95, 0.5, 1.0, 1.0, 1.0, 1.0, 0.64, 0.82, 0.82],
+                [(0, 3), (3, 4), (4, 5), (5, 7), (7, 8), (8, 10), (10, 11), (11, 13), (13, 17)],
+                [0.96, 0.73, 0.76, 1.0, 1.0, 0.99, 0.99, 0.57, 0.92]]
+
 
     tree = Build_Tree(new_data)
     json_string = tree.generate_json_tree(new_data)
+    breakpoint()
     print(json_string)

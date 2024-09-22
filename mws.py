@@ -98,5 +98,5 @@ class Mws:
 #
 if __name__ == '__main__':
     mws = Mws()
-    data = mws.predict("基于片段的多粒度分词")
+    data = mws.predict("高敖曹加封侍中、开府，进爵武城县侯")
     breakpoint()

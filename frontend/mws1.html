@@ -16,7 +16,10 @@
         #maxi{
             display: flex; /* 启用 Flexbox */
             flex-direction: column; /* 子元素垂直堆叠 */
+            justify-content: center;
+            align-items: center;
             width: 100%;
+            align-content: center;
         }
         .result-box {
             background-color: #f8f9fa;
@@ -26,6 +29,7 @@
             padding-top: 10px;
             margin-bottom: 1px;
             width: 100%;
+            align-content: center;
             /*width: calc(50% - 10px); !* 考虑到padding和margin的影响 *!*/
         }
         .result-box h5{
@@ -67,9 +71,9 @@
         .gradient-btn-9 { background: linear-gradient(to right, #808080, #808080); }
 
         .custom-button {
-            --bs-btn-bg: #6c757d; /* 主背景颜色 */
+            --bs-btn-bg: linear-gradient(to right, #6c757d, #545b64); /* 主背景颜色渐变 */
             --bs-btn-border-color: #6c757d; /* 边框颜色 */
-            --bs-btn-hover-bg: #545b64; /* 悬停时的背景颜色 */
+            --bs-btn-hover-bg: linear-gradient(to right, #545b64, #464b51); /* 悬停时的背景颜色渐变 */
             --bs-btn-hover-border-color: #545b64; /* 悬停时的边框颜色 */
             --bs-btn-focus-shadow-rgb: 108, 117, 125; /* 焦点状态下的阴影颜色 */
             --bs-btn-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 1px 1px rgba(0, 0, 0, 0.075); /* 阴影 */
@@ -77,13 +81,13 @@
             --bs-btn-disabled-opacity: 0.65; /* 禁用状态下的透明度 */
 
             color: #fff; /* 文字颜色 */
-            background-color: var(--bs-btn-bg);
+            background: var(--bs-btn-bg);
             border-color: var(--bs-btn-border-color);
             box-shadow: var(--bs-btn-box-shadow);
             transition: all 0.2s ease-in-out;
 
             &:hover {
-                background-color: var(--bs-btn-hover-bg);
+                background: var(--bs-btn-hover-bg);
                 border-color: var(--bs-btn-hover-border-color);
                 box-shadow: var(--bs-btn-box-shadow);
             }
@@ -93,7 +97,7 @@
             }
 
             &:active {
-                background-color: #545b64; /* 激活状态下的背景颜色 */
+                background: #545b64; /* 激活状态下的背景颜色 */
                 border-color: #545b64; /* 激活状态下的边框颜色 */
                 box-shadow: var(--bs-btn-box-shadow);
             }
@@ -116,29 +120,32 @@
             }
         }
 
+
     </style>
 </head>
 <body>
+<h1 style=" text-align: center;">Multi-granularity Word Segmentation Online Demonstration System</h1>
     <!-- 容器 -->
-    <div class="container mt-5">
+    <div class="container mt-5" style="align-content: center">
         <!-- 输入区域 -->
         <div class="row">
-            <div class="col-md-6 offset-md-3">
-                <div class="input-group mb-3">
+            <div class="col-md-8 offset-md-2">
+                <div class="input-group mb-4">
                     <input type="text" class="custom-input" id="inputText" style="background-color: #f8f9fa; color: #495057; border-color: #dee2e6;" placeholder="Please enter the text to be segmented.">
 <!--                    <input type="text" class="form-control" id="inputText" placeholder="Please enter the text to be segment.">-->
                     <button class="btn custom-button" type="button" id="segmentBtn">Word Segment</button>
+                    <button class="btn custom-button" type="button" id="swsBtn">SWS/MWS</button>
                 </div>
             </div>
         </div>
         <!-- 图表区域 -->
-        <div class="row mt-4">
-            <div class="col-md-10 offset-md-1">
+        <div class="row mt-4" id="tree">
+            <div class="col-md-10 offset-md-1" >
                 <div id="treeChart"></div>
             </div>
         </div>
         <!-- 结果展示区域 -->
-        <div class="row mt-4" id="maxi" style="align-content: center">
+        <div class="row mt-4 " id="maxi" style="align-content: center;display: None;margin: auto">
             <div class="col-md-10">
                 <div class="result-box">
                     <h5>CTB guideline</h5>
@@ -158,9 +165,9 @@
                 </div>
             </div>
             <div class="col-md-10">
-                <div class="result-box">
+                <div class="result-box" id="Candidate_words_div">
                     <h5>Candidate words</h5>
-                    <p id="candidate Words"></p>
+                    <p id="candidate_words"></p>
                 </div>
             </div>
         </div>
@@ -177,6 +184,7 @@
             const result_ctb = document.getElementById('result_ctb');
             const result_msr = document.getElementById('result_msr');
             const result_pku = document.getElementById('result_pku');
+            const candidate_words = document.getElementById('candidate_words')
 
             // 分词按钮点击事件
             segmentBtn.addEventListener('click', function() {
@@ -201,7 +209,6 @@
                 .then(data => {
                     // console.log(data);
                     renderTree(data.mws_res); // 渲染树状图
-                    // updateResults(text, data); // 更新结果显示
 					updateResults(data); // 更新结果显示
                 })
                 .catch((error) => {
@@ -301,21 +308,17 @@
                 myChart.setOption(option); // 应用图表配置
             }
 
-            // 更新结果显示
-            // function updateResults(text, data) {
-            //     const wordCount = countWords(data); // 计算分词数量
-            //     const avgConfidence = calculateAverageConfidence(data); // 计算平均置信度
-            //     // result_ctb.textContent = `输入文本的长度：${text.length} 字符`; // 显示文本长度
-            //     // result_msr.textContent = `分词数量：${wordCount} 个`; // 显示分词数量
-            //     // result_pku.textContent = `平均置信度：${avgConfidence.toFixed(2)}`; // 显示平均置信度
-            //     result_ctb.textContent='';
-            // }
 			function updateResults(jsonData) {
-				console.log(jsonData)
-			    document.getElementById('result_ctb').innerHTML = createButtons(jsonData.ctb_res);
-			    document.getElementById('result_msr').innerHTML = createButtons(jsonData.msr_res);
-			    document.getElementById('result_pku').innerHTML = createButtons(jsonData.pku_res);
-                document.getElementById('candiate_words').innerHTML = createButtons(jsonData.candiate_words);
+			    document.getElementById('result_ctb').innerHTML = createTable(jsonData.ctb_res);
+			    document.getElementById('result_msr').innerHTML = createTable(jsonData.msr_res);
+			    document.getElementById('result_pku').innerHTML = createTable(jsonData.pku_res);
+                if (Object.keys(jsonData.candidate_words).length === 0){
+                    document.getElementById('Candidate_words_div').style.display='None';
+                }
+                else {
+                    document.getElementById('candidate_words').innerHTML = createTable(jsonData.candidate_words);
+                }
+
 			}
             // 计算分词数量
             function countWords(node) {
@@ -361,6 +364,43 @@
 			        return html;
 			}
 
+
+            function createTable(data) {
+                let html = `
+                    <table style="width: 100%; font-family: Arial, sans-serif; border-collapse: collapse;">
+                        <tr>
+                            <td style="width: 180px; padding: 5px; font-size: 15px; font-weight: bold; color: #000000; border: 1px solid #ccc; text-align: center;">Sentence</td> <!-- 固定宽度索引列，文字居中 -->
+                `;
+
+                // 遍历 keys，创建 key 的表格行，使用自适应宽度并居中
+                for (const key of Object.keys(data)) {
+                    html += `
+                        <td style="padding: 5px; font-size: 15px; color: #000000; border: 1px solid #ccc; text-align: center;">${key}</td>
+                    `;
+                }
+
+                html += `
+                        </tr>
+                        <tr>
+                            <td style="width: 180px; padding: 5px; font-size: 15px; font-weight: bold; color: #000000; border: 1px solid #ccc; text-align: center;">Marginal Probability</td> <!-- 固定宽度索引列，文字居中 -->
+                `;
+
+                // 遍历 values，创建 value 的表格行，使用自适应宽度并居中
+                for (const value of Object.values(data)) {
+                    html += `
+                        <td style="padding: 5px; font-size: 15px; color: #000000; opacity: 0.5; border: 1px solid #ccc; text-align: center;">${value.toFixed(2)}</td>
+                    `;
+                }
+
+                html += '</tr></table>'; // 结束表格
+                return html;
+            }
+
+
+
+
+
+
             // 计算平均置信度
             function calculateAverageConfidence(node) {
                 let sum = 0;
@@ -382,5 +422,33 @@
             }
         });
     </script>
+      <script>
+        // 获取按钮和div
+        var button = document.getElementById('swsBtn');
+        var maxiDiv = document.getElementById('maxi');
+        var treeDiv = document.getElementById('tree');
+
+        // 添加点击事件监听器
+        button.addEventListener('click', function() {
+            if (maxiDiv.style.display === 'none') {
+                maxiDiv.style.display = 'block';
+                // maxiDiv.style.alignContent = 'center'; //align-content: center;
+                treeDiv.style.display = 'none';
+
+            } else {
+                maxiDiv.style.display = 'none';
+                treeDiv.style.display = 'block';
+            }
+        });
+    </script>
 </body>
+<style>
+     body {
+            /*display: flex;*/
+            justify-content: center; /* 水平居中 */
+            align-items: center;    /* 垂直居中 */
+            height: 100vh;          /* 设置body高度为视口高度 */
+            margin: 0;              /* 移除默认margin */
+        }
+</style>
 </html>
