@@ -4,8 +4,8 @@ import subprocess
 import os
 import ast
 
-class Mws:
-    def __init__(self, model_dir="exp/2024-08-21.split_mean_marginal_fine.xx_0.2-0.5", pred_dir="predict/demo", device=0, cws_feat="bert"):
+class Mws_no_baike:
+    def __init__(self, model_dir="exp/2024-04-26.bert.txt.maxi.data", pred_dir="predict/demo", device=0, cws_feat="bert"):
         """
         初始化预测器类。
         :param model_dir: 模型文件所在目录
@@ -98,5 +98,5 @@ class Mws:
 #
 if __name__ == '__main__':
     mws = Mws()
-    data = mws.predict("2.山西省第十届人大代表王玉田")
+    data = mws.predict("高敖曹加封侍中、开府，进爵武城县侯")
     breakpoint()

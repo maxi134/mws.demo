@@ -610,7 +610,6 @@ class CMD(object):
             # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
             pred_segs = self.decode_CKY(s_span=span_marginals_restrain, s_label=None, mask=mask)
-
             # TODO 这个简直方法是错误的
             segs_cky = []
             for i in range(batch_size):
