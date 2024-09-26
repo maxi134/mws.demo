@@ -98,5 +98,5 @@ class Mws:
 #
 if __name__ == '__main__':
     mws = Mws()
-    data = mws.predict("2.山西省第十届人大代表王玉田")
+    data = mws.predict("自然科学家们指出：")
     breakpoint()

@@ -610,7 +610,7 @@ class CMD(object):
             # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
             pred_segs = self.decode_CKY(s_span=span_marginals_restrain, s_label=None, mask=mask)
-            # TODO 这个简直方法是错误的
+            breakpoint()
             segs_cky = []
             for i in range(batch_size):
                 tmp_cky = self.pruning(pred_segs_ctb[i], pred_segs_msr[i], pred_segs_ppd[i], pred_segs[i])
@@ -971,6 +971,19 @@ class CMD(object):
         new_segs[:, :x, :x] = segs
         return new_segs
 
+    def add_restraint_zero(self,span_marginals,span):
+        """
+        将所有单粒度分词中没有出现的词，在边缘概率矩阵中都置0
+        """
+        masked_span_marginals = torch.zeros_like(span_marginals)
+        for batch in range(len(masked_span_marginals)):
+            for item in span[batch][0]:
+                i, j = item
+                masked_span_marginals[batch]
+        for batch in range(len(span_marginals)):
+            for item in span[batch][0]:
+                masked_span_marginals[batch,i,j] = span_marginals[batch,i,j]
+        return masked_span_marginals
     # @ classmethod
     def add_restraint(self, span_marginals, span):
         """
@@ -994,52 +1007,59 @@ class CMD(object):
         return span_marginals
 
     @staticmethod
-    def pruning(pred_ctb, pred_msr, pred_ppd, pred_cky):
-        # 不能是简单的删除，应该
-        parent_dic = CMD.find_parent(pred_cky)
+    # def pruning(pred_ctb, pred_msr, pred_ppd, pred_cky):
+    #     # 不能是简单的删除，应该
+    #     parent_dic = CMD.find_parent(pred_cky)
+    #     res = []
+    #     all_pred = list(set(pred_ctb + pred_msr + pred_ppd))
+    #     for item in pred_cky:
+    #         if item in all_pred:
+    #             res.append(item)
+    #
+    #     candidates = [item for item in pred_ctb if item not in res] # 候选词在词典中找不到父节点
+    #     for candidate in candidates:
+    #         candidate_parents = [item for item in pred_cky
+    #                              if item[0] <= candidate[0] and item[1] >= candidate[1]]
+    #         candidate_parent = min(candidate_parents, key=lambda x:x[1]-x[0])  # 找到了候选词的跟节点
+    #         wait_del = [item for item in pred_ctb
+    #                     if item[0] >= candidate_parent[0] and item[1] <= candidate_parent[1]]
+    #         for item in wait_del:
+    #             if item in res:
+    #                 res.remove(item)
+    #     candidates = [item for item in pred_msr if item not in res]  # 候选词在词典中找不到父节点
+    #     for candidate in candidates:
+    #         candidate_parents = [item for item in pred_cky
+    #                              if item[0] <= candidate[0] and item[1] >= candidate[1]]
+    #         candidate_parent = min(candidate_parents, key=lambda x: x[1] - x[0])  # 找到了候选词的跟节点
+    #         wait_del = [item for item in pred_msr
+    #                     if item[0] >= candidate_parent[0] and item[1] <= candidate_parent[1]]
+    #         for item in wait_del:
+    #             if item in res:
+    #                 res.remove(item)
+    #     candidates = [item for item in pred_ppd if item not in res]  # 候选词在词典中找不到父节点
+    #     for candidate in candidates:
+    #         candidate_parents = [item for item in pred_cky
+    #                              if item[0] <= candidate[0] and item[1] >= candidate[1]]
+    #         candidate_parent = min(candidate_parents, key=lambda x: x[1] - x[0])  # 找到了候选词的跟节点
+    #         wait_del = [item for item in pred_ppd
+    #                     if item[0] >= candidate_parent[0] and item[1] <= candidate_parent[1]]
+    #         for item in wait_del:
+    #             if item in res:
+    #                 res.remove(item)
+    #     # for item in candidate:
+    #     #     item_parent = parent_dic[f"{item}"]
+    #     #     for item_ctb in pred_ctb:
+    #     #         if parent_dic[item_ctb] == item_parent and item_ctb in res:
+    #     #             res.delete(item_ctb)
+    #     return res
+    #
+    def pruning(pred_ctb,pred_msr,pred_ppd,pred_cky):
         res = []
-        all_pred = list(set(pred_ctb + pred_msr + pred_ppd))
+        all_pred = list(set(pred_ctb+pred_msr+pred_ppd))
         for item in pred_cky:
             if item in all_pred:
                 res.append(item)
-
-        candidates = [item for item in pred_ctb if item not in res] # 候选词在词典中找不到父节点
-        for candidate in candidates:
-            candidate_parents = [item for item in pred_cky
-                                 if item[0] <= candidate[0] and item[1] >= candidate[1]]
-            candidate_parent = min(candidate_parents, key=lambda x:x[1]-x[0])  # 找到了候选词的跟节点
-            wait_del = [item for item in pred_ctb
-                        if item[0] >= candidate_parent[0] and item[1] <= candidate_parent[1]]
-            for item in wait_del:
-                if item in res:
-                    res.remove(item)
-        candidates = [item for item in pred_msr if item not in res]  # 候选词在词典中找不到父节点
-        for candidate in candidates:
-            candidate_parents = [item for item in pred_cky
-                                 if item[0] <= candidate[0] and item[1] >= candidate[1]]
-            candidate_parent = min(candidate_parents, key=lambda x: x[1] - x[0])  # 找到了候选词的跟节点
-            wait_del = [item for item in pred_msr
-                        if item[0] >= candidate_parent[0] and item[1] <= candidate_parent[1]]
-            for item in wait_del:
-                if item in res:
-                    res.remove(item)
-        candidates = [item for item in pred_ppd if item not in res]  # 候选词在词典中找不到父节点
-        for candidate in candidates:
-            candidate_parents = [item for item in pred_cky
-                                 if item[0] <= candidate[0] and item[1] >= candidate[1]]
-            candidate_parent = min(candidate_parents, key=lambda x: x[1] - x[0])  # 找到了候选词的跟节点
-            wait_del = [item for item in pred_ppd
-                        if item[0] >= candidate_parent[0] and item[1] <= candidate_parent[1]]
-            for item in wait_del:
-                if item in res:
-                    res.remove(item)
-        # for item in candidate:
-        #     item_parent = parent_dic[f"{item}"]
-        #     for item_ctb in pred_ctb:
-        #         if parent_dic[item_ctb] == item_parent and item_ctb in res:
-        #             res.delete(item_ctb)
         return res
-
     @staticmethod
     def find_parent(spans):
         dic = dict()

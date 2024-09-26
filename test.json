@@ -1,0 +1,19 @@
+{'name': '自然科学家们指出：', 'value': None, 'children': [
+  {'name': 'P/自然科学家', 'value': 0.34, 'children': [
+    {'name': 'M/自然科学', 'value': 0.33, 'children': [
+      {'name': 'C/自然', 'value': 0.33, 'children': [
+
+      ]}]},
+    {'name': 'M/家', 'value': 0.33, 'children': [
+
+    ]}
+  ]},
+  {'name': 'M+P/们', 'value': 0.67, 'children': [
+
+  ]},
+  {'name': 'C+M+P/指出', 'value': 1.0, 'children': [
+
+  ]},
+  {'name': 'C+M+P/：', 'value': 1.0, 'children': [
+
+  ]}]}
